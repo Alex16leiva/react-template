@@ -1,4 +1,4 @@
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid';
 import { esES } from '@mui/x-data-grid/locales';
 import { Box } from '@mui/material';
 import { PAGE_SIZE_OPTIONS } from '../../constants/appConstants';
@@ -14,6 +14,8 @@ export const DataGridControl = ({
   onSortChange,
   loading = false,
   getRowId,
+  showToolbar = true,
+  fileExcelName = 'excelFile',
   sx = {},
   ...props
 }) => {
@@ -26,8 +28,16 @@ export const DataGridControl = ({
     }
   };
 
+  const CustomToolbar = () => (
+        <GridToolbarContainer>
+            <GridToolbarExport
+                printOptions={{ disableToolbarButton: true }}
+                csvOptions={{ fileName: fileExcelName, utf8WithBom: true, delimiter: ';' }}
+            />
+        </GridToolbarContainer>
+    );
+
   return (
-    <Box sx={{ width: '100%', ...sx }}>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -41,6 +51,7 @@ export const DataGridControl = ({
           if (model.page !== pageIndex && onPageChange) onPageChange(model.page);
           if (model.pageSize !== pageSize && onPageSizeChange) onPageSizeChange(model.pageSize);
         }}
+        slots={showToolbar ? { toolbar: CustomToolbar } : {}}
         onSortModelChange={handleSortChange}
         getRowId={getRowId}
         disableRowSelectionOnClick
@@ -54,6 +65,5 @@ export const DataGridControl = ({
         }}
         {...props}
       />
-    </Box>
   );
 };
