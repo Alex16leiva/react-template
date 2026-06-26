@@ -26,17 +26,16 @@ const NavItem = ({ icon, label, path, matchPrefix = false }) => {
   );
 };
 
-export const Sidebar = ({ open, drawerWidth }) => {
+export const Sidebar = ({ open, drawerWidth, onClose }) => {
   const { canView: canViewSeguridad } = usePermissions(PANTALLAS.Seguridad);
   const { canView: canViewConfig } = usePermissions(PANTALLAS.CONFIGURACIONES);
 
   return (
     <Drawer
-      variant="persistent"
+      variant="temporary"
       open={open}
+      onClose={onClose}
       sx={{
-        width: open ? drawerWidth : 0,
-        flexShrink: 0,
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',

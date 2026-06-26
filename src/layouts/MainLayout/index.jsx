@@ -15,13 +15,11 @@ export const MainLayout = () => {
         drawerWidth={DRAWER_WIDTH}
         onMenuToggle={() => setSidebarOpen((prev) => !prev)}
       />
-      <Sidebar open={sidebarOpen} drawerWidth={DRAWER_WIDTH} />
+      <Sidebar open={sidebarOpen} drawerWidth={DRAWER_WIDTH} onClose={() => setSidebarOpen(false)} />
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          width: { sm: `calc(100% - ${sidebarOpen ? DRAWER_WIDTH : 0}px)` },
-          transition: 'width 0.2s',
           bgcolor: 'grey.50',
           minHeight: '100vh',
         }}
