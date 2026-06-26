@@ -35,7 +35,7 @@ const doRefreshToken = async () => {
     const res = await fetch(`${BASE_URL}${ENDPOINTS.AUTH.REFRESH_TOKEN}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken, refreshToken }),
+      body: withUserInfo({ accessToken, refreshToken }),
     });
     if (!res.ok) return null;
     const result = await res.json();
