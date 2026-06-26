@@ -1,50 +1,34 @@
-import { useEffect } from 'react';
-import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { useState } from 'react';
 import PeopleIcon from '@mui/icons-material/People';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LockIcon from '@mui/icons-material/Lock';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { SideBarControl } from '../../components/SideBarControl';
 import { MainContainerControl } from '../../components/MainContainerControl';
+import { SideBarPageLayout } from '../../components/SideBarPageLayout';
+import UserManagement from './usuarios/UserManagement';
+import RoleManagement from './roles/RoleManagement';
+import PermisosManagement from './permisos/PermisosManagement';
 
 const MENU_ITEMS = [
-  { label: 'Usuarios', path: '/seguridad/usuarios', icon: <PeopleIcon fontSize="small" /> },
-  { label: 'Roles', path: '/seguridad/roles', icon: <AdminPanelSettingsIcon fontSize="small" /> },
-  { label: 'Permisos', path: '/seguridad/permisos', icon: <LockIcon fontSize="small" /> },
+  { id: 'usuario', label: 'Usuarios', icon: <PeopleIcon fontSize="small" />,            component: UserManagement },
+  { id: 'rol',     label: 'Roles',    icon: <AdminPanelSettingsIcon fontSize="small" />, component: RoleManagement },
+  { id: 'permiso', label: 'Permisos', icon: <LockIcon fontSize="small" />,               component: PermisosManagement },
 ];
 
 const SeguridadPage = () => {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    if (pathname === '/seguridad') {
-      navigate('/seguridad/usuarios', { replace: true });
-    }
-  }, [pathname, navigate]);
+  const [activeId, setActiveId] = useState(MENU_ITEMS[0].id);
+  const ActiveComponent = MENU_ITEMS.find((i) => i.id === activeId)?.component;
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <SideBarControl title="Seguridad">
-        <List disablePadding sx={{ p: 1 }}>
-          {MENU_ITEMS.map((item) => (
-            <ListItemButton
-              key={item.path}
-              selected={pathname === item.path}
-              onClick={() => navigate(item.path)}
-              sx={{ borderRadius: 1, mb: 0.5 }}
-            >
-              <ListItemIcon sx={{ minWidth: 32 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: 14 }} />
-            </ListItemButton>
-          ))}
-        </List>
-      </SideBarControl>
-
-      <MainContainerControl>
-        <Outlet />
-      </MainContainerControl>
-    </Box>
+    <MainContainerControl>
+      <SideBarPageLayout
+        title="Seguridad"
+        items={MENU_ITEMS}
+        activeId={activeId}
+        onItemClick={setActiveId}
+      >
+        {ActiveComponent && <ActiveComponent />}
+      </SideBarPageLayout>
+    </MainContainerControl>
   );
 };
 
