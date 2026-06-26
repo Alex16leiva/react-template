@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, Button, IconButton, Tooltip,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid,
+  Box, IconButton, Tooltip,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, Button,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DataGridControl } from '../../../components/DataGrid';
+import { CommandBarControl } from '../../../components/CommandBarControl';
+import { SearchControl } from '../../../components/SearchControl';
+import { SecundayContainerControl } from '../../../components/MainContainerControl/SecundayContainerControl';
 import { usePagination } from '../../../hooks/usePagination';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useNotification } from '../../../hooks/useNotification';
@@ -90,12 +93,9 @@ const RoleManagement = () => {
   const [loading, setLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedRol, setSelectedRol] = useState(null);
-  const { canEdit } = usePermissions(PANTALLAS.ROLES);
-
-  const {
-    queryInfo, totalItems, pageIndex, pageSize,
-    applySearchResult, handlePageChange, handlePageSizeChange, handleSortChange,
-  } = usePagination();
+  const [searchText, setSearchText] = useState('');
+  const { canEdit } = usePermissions(PANTALLAS.Seguridad);
+  const { pageIndex, pageSize, handlePageChange, handlePageSizeChange, handleSortChange } = usePagination();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -114,6 +114,13 @@ const RoleManagement = () => {
   const openNew = () => { setSelectedRol(null); setFormOpen(true); };
   const openEdit = (rol) => { setSelectedRol(rol); setFormOpen(true); };
 
+  const filteredRows = searchText
+    ? rows.filter((r) =>
+        r.rolId?.toLowerCase().includes(searchText.toLowerCase()) ||
+        r.descripcion?.toLowerCase().includes(searchText.toLowerCase())
+      )
+    : rows;
+
   const columns = [
     { field: 'rolId', headerName: 'ID', flex: 1 },
     { field: 'descripcion', headerName: 'Descripción', flex: 2 },
@@ -127,30 +134,39 @@ const RoleManagement = () => {
     },
   ];
 
+  const commandItems = [
+    { id: 'crear', label: 'Nuevo rol', variant: 'text', icon: <AddIcon fontSize="small" />, onClick: openNew, disabled: !canEdit },
+    { id: 'recargar', label: 'Recargar', icon: <RefreshIcon fontSize="small" />, onClick: load, align: 'right' },
+  ];
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" fontWeight={700}>Roles</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Recargar"><IconButton onClick={load}><RefreshIcon /></IconButton></Tooltip>
-          {canEdit && (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>Nuevo rol</Button>
-          )}
-        </Box>
+    <SecundayContainerControl sx={{ display: 'flex', flexDirection: 'column' }}>
+      <CommandBarControl items={commandItems} />
+
+      <Box sx={{ px: 2, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <SearchControl
+          value={searchText}
+          onChange={setSearchText}
+          onSearch={setSearchText}
+          placeholder="Buscar por ID o descripción..."
+          sx={{ maxWidth: 380 }}
+        />
       </Box>
 
-      <DataGridControl
-        rows={rows}
-        columns={columns}
-        totalItems={rows.length}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        onSortChange={handleSortChange}
-        loading={loading}
-        getRowId={(r) => r.rolId}
-      />
+      <Box sx={{ flex: 1, minHeight: 0, p: 2 }}>
+        <DataGridControl
+          rows={filteredRows}
+          columns={columns}
+          totalItems={filteredRows.length}
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onSortChange={handleSortChange}
+          loading={loading}
+          getRowId={(r) => r.rolId}
+        />
+      </Box>
 
       <RolForm
         open={formOpen}
@@ -158,7 +174,7 @@ const RoleManagement = () => {
         onClose={() => setFormOpen(false)}
         onSaved={load}
       />
-    </Box>
+    </SecundayContainerControl>
   );
 };
 
