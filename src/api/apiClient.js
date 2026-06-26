@@ -1,6 +1,7 @@
 import { BASE_URL, ENDPOINTS } from '../constants/apiUrls';
 import { authStorage } from '../utils/authStorage';
 import { showLoading, hideLoading } from '../store/loadingSlice';
+import { unwrapResult } from '../utils/resultHelper';
 
 // Injected after store creation to avoid circular imports — see main.jsx
 let _store = null;
@@ -109,7 +110,8 @@ const request = async (method, endpoint, body, addUserInfo) => {
 
   dispatch(showLoading());
   try {
-    return await executeRequest(url, options);
+    const raw = await executeRequest(url, options);
+    return unwrapResult(raw);
   } finally {
     dispatch(hideLoading());
   }
@@ -121,7 +123,9 @@ const postPublic = (endpoint, body) =>
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  }).then((r) => r.json().catch(() => null));
+  })
+    .then((r) => r.json().catch(() => null))
+    .then((raw) => unwrapResult(raw));
 
 export const apiClient = {
   get: (endpoint) => request('GET', endpoint, null, false),

@@ -1,4 +1,4 @@
-export const unwrapResult = (result) => {
+export const unwrapResult = (result) => {  
   if (!result) throw new Error('No response from server');
   if (!result.isSuccess) {
     const validationMsg = result?.ValidationErrorMessage;
