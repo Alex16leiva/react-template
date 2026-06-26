@@ -5,8 +5,8 @@ export const SecundayContainerControl = ({children, sx}) => {
   return (
     <Box sx={{
         overflow: 'hidden',
-        m:1,
-        borderRadius:1,
+        m:2,
+        height:'calc(100% - 38px)',
         ...sx
     }}>
         {children}
