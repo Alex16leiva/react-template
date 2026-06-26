@@ -10,7 +10,7 @@ import { DataGridControl } from '../../../components/DataGrid';
 import { usePagination } from '../../../hooks/usePagination';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useNotification } from '../../../hooks/useNotification';
-import { usuariosApi } from '../../../api/usuariosApi';
+import { apiClient } from '../../../api/apiClient';
 import { PANTALLAS } from '../../../constants/appConstants';
 
 const EMPTY_ROL = { rolId: '', descripcion: '' };
@@ -41,8 +41,8 @@ const RolForm = ({ open, rol, onClose, onSaved }) => {
     if (!validate()) return;
     setSaving(true);
     try {
-      const fn = isNew ? usuariosApi.crearRol : usuariosApi.editarRol;
-      await fn(form);
+      const endpoint = isNew ? 'User/crear-rol' : 'User/editar-rol';
+      await apiClient.post(endpoint, { rol: form });
       notifySuccess(isNew ? 'Rol creado exitosamente' : 'Rol actualizado');
       onSaved();
       onClose();
@@ -100,8 +100,7 @@ const RoleManagement = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Roles come as a plain list, not paginated
-      const data = await usuariosApi.obtenerRoles();
+      const data = await apiClient.get('User/obtener-roles');
       setRows(data ?? []);
     } catch {
       setRows([]);

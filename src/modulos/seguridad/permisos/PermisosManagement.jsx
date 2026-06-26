@@ -6,7 +6,7 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useNotification } from '../../../hooks/useNotification';
-import { usuariosApi } from '../../../api/usuariosApi';
+import { apiClient } from '../../../api/apiClient';
 import { PANTALLAS } from '../../../constants/appConstants';
 
 const PermisosManagement = () => {
@@ -21,7 +21,10 @@ const PermisosManagement = () => {
 
   const loadCatalogs = useCallback(async () => {
     try {
-      const [r, p] = await Promise.all([usuariosApi.obtenerRoles(), usuariosApi.obtenerPantallas()]);
+      const [r, p] = await Promise.all([
+        apiClient.get('User/obtener-roles'),
+        apiClient.get('User/obtener-pantalla'),
+      ]);
       setRoles(r ?? []);
       setPantallas(p ?? []);
     } catch { /* ignore */ }
@@ -34,7 +37,6 @@ const PermisosManagement = () => {
     setLoading(true);
     const rol = roles.find((r) => r.rolId === selectedRolId);
     const existingPermisos = rol?.permisos ?? [];
-    // Build full permission matrix from all pantallas
     const matrix = pantallas.map((p) => {
       const found = existingPermisos.find((e) => e.pantallaId === p.pantallaId);
       return found ?? { rolId: selectedRolId, pantallaId: p.pantallaId, ver: false, editar: false, eliminar: false };
@@ -48,12 +50,10 @@ const PermisosManagement = () => {
       prev.map((p) => {
         if (p.pantallaId !== pantallaId) return p;
         const updated = { ...p, [field]: !p[field] };
-        // If disabling "ver", also disable the others
         if (field === 'ver' && !updated.ver) {
           updated.editar = false;
           updated.eliminar = false;
         }
-        // If enabling editar/eliminar, ensure ver is also enabled
         if ((field === 'editar' || field === 'eliminar') && updated[field]) {
           updated.ver = true;
         }
@@ -66,9 +66,8 @@ const PermisosManagement = () => {
     if (!selectedRolId) return;
     setSaving(true);
     try {
-      await usuariosApi.editarPermisos(selectedRolId, permisos);
+      await apiClient.post('User/edicion-permisos', { rolId: selectedRolId, permisos });
       notifySuccess('Permisos actualizados exitosamente');
-      // Reload roles to reflect new permissions
       await loadCatalogs();
     } catch (err) {
       notifyApiError(err);
@@ -122,28 +121,13 @@ const PermisosManagement = () => {
                   <TableRow key={p.pantallaId} hover>
                     <TableCell>{p.descripcion}</TableCell>
                     <TableCell align="center">
-                      <Checkbox
-                        size="small"
-                        checked={perm.ver}
-                        onChange={() => toggle(p.pantallaId, 'ver')}
-                        disabled={!canEdit}
-                      />
+                      <Checkbox size="small" checked={perm.ver} onChange={() => toggle(p.pantallaId, 'ver')} disabled={!canEdit} />
                     </TableCell>
                     <TableCell align="center">
-                      <Checkbox
-                        size="small"
-                        checked={perm.editar}
-                        onChange={() => toggle(p.pantallaId, 'editar')}
-                        disabled={!canEdit}
-                      />
+                      <Checkbox size="small" checked={perm.editar} onChange={() => toggle(p.pantallaId, 'editar')} disabled={!canEdit} />
                     </TableCell>
                     <TableCell align="center">
-                      <Checkbox
-                        size="small"
-                        checked={perm.eliminar}
-                        onChange={() => toggle(p.pantallaId, 'eliminar')}
-                        disabled={!canEdit}
-                      />
+                      <Checkbox size="small" checked={perm.eliminar} onChange={() => toggle(p.pantallaId, 'eliminar')} disabled={!canEdit} />
                     </TableCell>
                   </TableRow>
                 );

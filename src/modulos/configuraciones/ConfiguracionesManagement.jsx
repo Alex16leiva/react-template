@@ -13,7 +13,7 @@ import { DataGridControl } from '../../components/DataGrid';
 import { usePagination } from '../../hooks/usePagination';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useNotification } from '../../hooks/useNotification';
-import { configuracionesApi } from '../../api/configuracionesApi';
+import { apiClient } from '../../api/apiClient';
 import { PANTALLAS } from '../../constants/appConstants';
 
 const EMPTY_CONFIG = { configuracionId: '', descripcion: '' };
@@ -45,8 +45,8 @@ const DetalleForm = ({ open, detalle, configuracionId, onClose, onSaved }) => {
     if (!validate()) return;
     setSaving(true);
     try {
-      const fn = isNew ? configuracionesApi.crearConfiguracionDetalle : configuracionesApi.editarConfiguracionDetalle;
-      await fn(form);
+      const endpoint = isNew ? 'Configuraciones/crear-configuracion-detalle' : 'Configuraciones/editar-configuracion-detalle';
+      await apiClient.post(endpoint, { configuracionDetalle: form });
       notifySuccess('Detalle guardado exitosamente');
       onSaved();
       onClose();
@@ -102,8 +102,8 @@ const ConfiguracionesManagement = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await configuracionesApi.obtenerConfiguraciones(queryInfo);
-      setRows(applySearchResult(result));
+      const data = await apiClient.post('Configuraciones/obtener-configuraciones', { queryInfo });
+      setRows(applySearchResult(data));
     } catch {
       setRows([]);
     } finally {
@@ -128,8 +128,8 @@ const ConfiguracionesManagement = () => {
     if (!validateConfig()) return;
     setSaving(true);
     try {
-      const fn = !selectedConfig ? configuracionesApi.crearConfiguracion : configuracionesApi.editarConfiguracion;
-      await fn(formData);
+      const endpoint = !selectedConfig ? 'Configuraciones/crear-configuracion' : 'Configuraciones/editar-configuracion';
+      await apiClient.post(endpoint, { configuracion: formData });
       notifySuccess(selectedConfig ? 'Configuración actualizada' : 'Configuración creada');
       setConfigFormOpen(false);
       load();
@@ -224,7 +224,6 @@ const ConfiguracionesManagement = () => {
         </Accordion>
       ))}
 
-      {/* Config form dialog */}
       <Dialog open={configFormOpen} onClose={() => setConfigFormOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{selectedConfig ? 'Editar Configuración' : 'Nueva Configuración'}</DialogTitle>
         <DialogContent dividers>

@@ -1,4 +1,4 @@
-import { BASE_URL, ENDPOINTS } from '../constants/apiUrls';
+import { BASE_URL } from '../constants/apiUrls';
 import { authStorage } from '../utils/authStorage';
 import { showLoading, hideLoading } from '../store/loadingSlice';
 import { unwrapResult } from '../utils/resultHelper';
@@ -33,7 +33,7 @@ const doRefreshToken = async () => {
   if (!accessToken || !refreshToken) return null;
 
   try {
-    const res = await fetch(`${BASE_URL}${ENDPOINTS.AUTH.REFRESH_TOKEN}`, {
+    const res = await fetch(`${BASE_URL}User/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: withUserInfo({ accessToken, refreshToken }),

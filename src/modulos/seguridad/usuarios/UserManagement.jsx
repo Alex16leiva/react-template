@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, Button, IconButton, Tooltip, Chip, Switch,
+  Box, Typography, IconButton, Tooltip, Chip, Switch,
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, MenuItem, Grid,
+  Button,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { CommandBarControl } from '../../../components/CommandBarControl';
+import { SearchControl } from '../../../components/SearchControl';
+import { apiClient } from '../../../api/apiClient';
 import { DataGridControl } from '../../../components/DataGrid';
 import { usePagination } from '../../../hooks/usePagination';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useNotification } from '../../../hooks/useNotification';
-import { usuariosApi } from '../../../api/usuariosApi';
 import { PANTALLAS } from '../../../constants/appConstants';
 import { SecundayContainerControl } from '../../../components/MainContainerControl/SecundayContainerControl';
 
@@ -50,8 +53,8 @@ const UserForm = ({ open, user, roles, onClose, onSaved }) => {
     if (!validate()) return;
     setSaving(true);
     try {
-      const fn = isNew ? usuariosApi.crearUsuario : usuariosApi.editarUsuario;
-      await fn(form);
+      const endpoint = isNew ? 'User/crear-usuario' : 'User/editar-usuario';
+      await apiClient.post(endpoint, { usuario: form });
       notifySuccess(isNew ? 'Usuario creado exitosamente' : 'Usuario actualizado');
       onSaved();
       onClose();
@@ -126,7 +129,10 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const { canEdit } = usePermissions(PANTALLAS.USUARIOS);
+  const [searchText, setSearchText] = useState('');
+  const [searchPredicate, setSearchPredicate] = useState('');
+  const { canEdit } = usePermissions(PANTALLAS.Seguridad);
+  const { notifyApiError } = useNotification();
 
   const {
     queryInfo, totalItems, pageIndex, pageSize,
@@ -135,22 +141,38 @@ const UserManagement = () => {
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await usuariosApi.obtenerRoles();
+      const data = await apiClient.get('User/obtener-roles');
       setRoles(data ?? []);
     } catch { /* ignore */ }
   }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
+    const hasSearch = Boolean(searchPredicate);
     try {
-      const result = await usuariosApi.obtenerUsuarios(queryInfo);
-      setRows(applySearchResult(result));
+      const data = await apiClient.post('User/obtener-usuarios', {
+        ...queryInfo,
+        predicate: hasSearch ? 'usuarioId.Contains(@0) || nombre.Contains(@0) || apellido.Contains(@0)' : '',
+        paramValues: hasSearch ? [searchPredicate] : [],
+      });
+      setRows(applySearchResult(data));
     } catch (err) {
+      notifyApiError(err);
       setRows([]);
     } finally {
       setLoading(false);
     }
-  }, [queryInfo, applySearchResult]);
+  }, [queryInfo, searchPredicate, applySearchResult]);
+
+  const handleSearch = (text) => {
+    setSearchText(text);
+    setSearchPredicate(text);
+  };
+
+  const handleSearchChange = (text) => {
+    setSearchText(text);
+    if (!text) setSearchPredicate('');
+  };
 
   useEffect(() => { loadRoles(); }, [loadRoles]);
   useEffect(() => { load(); }, [load]);
@@ -181,42 +203,42 @@ const UserManagement = () => {
   ];
 
 
+  const commandItems = [
+    { id: 'crear', label: 'Crear usuario', variant: 'text', icon: <AddIcon fontSize="small" />, onClick: openNew, disabled: !canEdit },
+    { id: 'recargar', label: 'Recargar', icon: <RefreshIcon fontSize="small" />, onClick: load, align: 'right' },
+  ];
+
+
   return (
-    <SecundayContainerControl >
-      
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-        }}>
-          <Typography variant="h5" fontWeight={700}>Usuarios</Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Tooltip title="Recargar">
-              <IconButton onClick={load}><RefreshIcon /></IconButton>
-            </Tooltip>
-            {canEdit && (
-              <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-                Nuevo usuario
-              </Button>
-            )}
+    <SecundayContainerControl>
+      <CommandBarControl items={commandItems} />
+      <Box sx={{m:2, height:'98%'}}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="h5" fontWeight={700}>Usuarios</Typography>
+            <SearchControl
+              value={searchText}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Buscar por usuario, nombre o apellido..."
+              sx={{ width: 340 }}
+            />
+          </Box>
+
+          <Box sx={{ height: '90%', width: '100%' }}>
+            <DataGridControl
+              rows={rows}
+              columns={columns}
+              totalItems={totalItems}
+              pageIndex={pageIndex}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              onSortChange={handleSortChange}
+              loading={loading}
+              getRowId={(r) => r.usuarioId}
+            />
           </Box>
         </Box>
-
-        <Box sx={{ height: '95%', width: '100%' }}>
-          <DataGridControl
-            rows={rows}
-            columns={columns}
-            totalItems={totalItems}
-            pageIndex={pageIndex}
-            pageSize={pageSize}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            onSortChange={handleSortChange}
-            loading={loading}
-            getRowId={(r) => r.usuarioId}
-          />
-        </Box>
-
       <UserForm
         open={formOpen}
         user={selectedUser}
