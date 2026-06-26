@@ -56,7 +56,6 @@ export const DataGridControl = ({
         getRowId={getRowId}
         disableRowSelectionOnClick
         localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-        autoHeight
         sx={{
           '& .MuiDataGrid-columnHeader': { backgroundColor: 'primary.main', color: 'primary.contrastText' },
           '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
