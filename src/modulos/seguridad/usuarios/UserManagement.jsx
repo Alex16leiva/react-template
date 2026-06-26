@@ -13,6 +13,7 @@ import { usePermissions } from '../../../hooks/usePermissions';
 import { useNotification } from '../../../hooks/useNotification';
 import { usuariosApi } from '../../../api/usuariosApi';
 import { PANTALLAS } from '../../../constants/appConstants';
+import { SecundayContainerControl } from '../../../components/MainContainerControl/SecundayContainerControl';
 
 const EMPTY_USER = {
   usuarioId: '', nombre: '', apellido: '', contrasena: '',
@@ -179,34 +180,42 @@ const UserManagement = () => {
     },
   ];
 
-  return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" fontWeight={700}>Usuarios</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Recargar">
-            <IconButton onClick={load}><RefreshIcon /></IconButton>
-          </Tooltip>
-          {canEdit && (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-              Nuevo usuario
-            </Button>
-          )}
-        </Box>
-      </Box>
 
-      <DataGridControl
-        rows={rows}
-        columns={columns}
-        totalItems={totalItems}
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        onSortChange={handleSortChange}
-        loading={loading}
-        getRowId={(r) => r.usuarioId}
-      />
+  return (
+    <SecundayContainerControl >
+      
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+        }}>
+          <Typography variant="h5" fontWeight={700}>Usuarios</Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="Recargar">
+              <IconButton onClick={load}><RefreshIcon /></IconButton>
+            </Tooltip>
+            {canEdit && (
+              <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+                Nuevo usuario
+              </Button>
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={{ height: '95%', width: '100%' }}>
+          <DataGridControl
+            rows={rows}
+            columns={columns}
+            totalItems={totalItems}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            onSortChange={handleSortChange}
+            loading={loading}
+            getRowId={(r) => r.usuarioId}
+          />
+        </Box>
 
       <UserForm
         open={formOpen}
@@ -215,7 +224,8 @@ const UserManagement = () => {
         onClose={() => setFormOpen(false)}
         onSaved={load}
       />
-    </Box>
+
+    </SecundayContainerControl>
   );
 };
 
