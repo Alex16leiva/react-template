@@ -9,7 +9,7 @@ export const SideBarPageLayout = ({ title, items, activeId, onItemClick, childre
       activeId={activeId}
       onItemClick={onItemClick}
     />
-    <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, overflow: 'auto' }}>
+    <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, height:'100%', overflow: 'auto' }}>
       {children}
     </Box>
   </Box>
