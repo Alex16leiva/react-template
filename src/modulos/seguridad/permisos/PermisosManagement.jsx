@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Typography, MenuItem, TextField, Table, TableHead, TableRow,
-  TableCell, TableBody, Checkbox, Button, Paper, CircularProgress,
+  Box, Typography, MenuItem, TextField, Checkbox, Button, CircularProgress,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import { usePermissions } from '../../../hooks/usePermissions';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
+import { DataGridControl } from '../../../components/DataGrid';
+import { CommandBarControl } from '../../../components/CommandBarControl';
+import { SecundayContainerControl } from '../../../components/MainContainerControl/SecundayContainerControl';
+import { usePagination } from '../../../hooks/usePagination';
 import { useNotification } from '../../../hooks/useNotification';
 import { apiClient } from '../../../api/apiClient';
-import { PANTALLAS } from '../../../constants/appConstants';
 
 const PermisosManagement = () => {
   const [roles, setRoles] = useState([]);
@@ -16,8 +18,8 @@ const PermisosManagement = () => {
   const [permisos, setPermisos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { canEdit } = usePermissions(PANTALLAS.PERMISOS);
   const { notifySuccess, notifyApiError } = useNotification();
+  const { pageIndex, pageSize, handlePageChange, handlePageSizeChange } = usePagination();
 
   const loadCatalogs = useCallback(async () => {
     try {
@@ -76,67 +78,90 @@ const PermisosManagement = () => {
     }
   };
 
+  const getPantallaName = (id) => pantallas.find((p) => p.pantallaId === id)?.descripcion ?? id;
+
+  const columns = [
+    {
+      field: 'pantallaId', headerName: 'Pantalla', flex: 1,
+      renderCell: ({ value }) => getPantallaName(value),
+    },
+    {
+      field: 'ver', headerName: 'Ver', width: 80, sortable: false, align: 'center', headerAlign: 'center',
+      renderCell: ({ row }) => (
+        <Checkbox size="small" checked={row.ver} disabled={false}
+          onClick={(e) => { e.stopPropagation(); toggle(row.pantallaId, 'ver'); }} />
+      ),
+    },
+    {
+      field: 'editar', headerName: 'Editar', width: 80, sortable: false, align: 'center', headerAlign: 'center',
+      renderCell: ({ row }) => (
+        <Checkbox size="small" checked={row.editar} disabled={false}
+          onClick={(e) => { e.stopPropagation(); toggle(row.pantallaId, 'editar'); }} />
+      ),
+    },
+    {
+      field: 'eliminar', headerName: 'Eliminar', width: 90, sortable: false, align: 'center', headerAlign: 'center',
+      renderCell: ({ row }) => (
+        <Checkbox size="small" checked={row.eliminar} disabled={false}
+          onClick={(e) => { e.stopPropagation(); toggle(row.pantallaId, 'eliminar'); }} />
+      ),
+    },
+  ];
+
+  const commandItems = [
+    {
+      id: 'guardar',
+      label: 'Guardar cambios',
+      variant: 'text',
+      icon: saving ? <CircularProgress size={14} color="inherit" /> : <SaveIcon fontSize="small" />,
+      onClick: handleSave,
+      disabled: !selectedRolId || saving,
+      align: 'right',
+    },
+  ];
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" fontWeight={700}>Permisos por Rol</Typography>
-        {canEdit && selectedRolId && (
-          <Button
-            variant="contained"
-            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
-        )}
+    <SecundayContainerControl sx={{ display: 'flex', flexDirection: 'column' }}>
+      <CommandBarControl items={commandItems} />
+
+      <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Rol:</Typography>
+        <TextField
+          select size="small" sx={{ minWidth: 280 }}
+          value={selectedRolId}
+          onChange={(e) => setSelectedRolId(e.target.value)}
+        >
+          <MenuItem value="">-- Seleccionar rol --</MenuItem>
+          {roles.map((r) => (
+            <MenuItem key={r.rolId} value={r.rolId}>{r.descripcion}</MenuItem>
+          ))}
+        </TextField>
       </Box>
 
-      <TextField
-        select label="Seleccionar Rol" size="small" sx={{ minWidth: 250, mb: 3 }}
-        value={selectedRolId} onChange={(e) => setSelectedRolId(e.target.value)}
-      >
-        <MenuItem value="">-- Seleccionar --</MenuItem>
-        {roles.map((r) => <MenuItem key={r.rolId} value={r.rolId}>{r.descripcion}</MenuItem>)}
-      </TextField>
-
-      {loading && <CircularProgress />}
-
-      {!loading && selectedRolId && (
-        <Paper variant="outlined">
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ bgcolor: 'primary.main' }}>
-                <TableCell sx={{ color: 'white', fontWeight: 700 }}>Pantalla</TableCell>
-                <TableCell align="center" sx={{ color: 'white', fontWeight: 700 }}>Ver</TableCell>
-                <TableCell align="center" sx={{ color: 'white', fontWeight: 700 }}>Editar</TableCell>
-                <TableCell align="center" sx={{ color: 'white', fontWeight: 700 }}>Eliminar</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pantallas.map((p) => {
-                const perm = permisos.find((x) => x.pantallaId === p.pantallaId);
-                if (!perm) return null;
-                return (
-                  <TableRow key={p.pantallaId} hover>
-                    <TableCell>{p.descripcion}</TableCell>
-                    <TableCell align="center">
-                      <Checkbox size="small" checked={perm.ver} onChange={() => toggle(p.pantallaId, 'ver')} disabled={!canEdit} />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Checkbox size="small" checked={perm.editar} onChange={() => toggle(p.pantallaId, 'editar')} disabled={!canEdit} />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Checkbox size="small" checked={perm.eliminar} onChange={() => toggle(p.pantallaId, 'eliminar')} disabled={!canEdit} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Paper>
-      )}
-    </Box>
+      <Box sx={{ flex: 1, minHeight: 0, p: 2 }}>
+        {!selectedRolId ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 1, color: 'text.disabled' }}>
+            <LockOpenIcon sx={{ fontSize: 48 }} />
+            <Typography variant="body2">Selecciona un rol para ver y editar sus permisos</Typography>
+          </Box>
+        ) : (
+          <DataGridControl
+            rows={permisos}
+            columns={columns}
+            totalItems={permisos.length}
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            loading={loading}
+            getRowId={(r) => r.pantallaId}
+            showToolbar={false}
+            disableRowSelectionOnClick
+            sx={{ height: '100%' }}
+          />
+        )}
+      </Box>
+    </SecundayContainerControl>
   );
 };
 
