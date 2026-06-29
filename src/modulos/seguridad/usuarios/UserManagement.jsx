@@ -151,9 +151,13 @@ const UserManagement = () => {
     const hasSearch = Boolean(searchPredicate);
     try {
       const data = await apiClient.post('User/obtener-usuarios', {
-        ...queryInfo,
-        predicate: hasSearch ? 'usuarioId.Contains(@0) || nombre.Contains(@0) || apellido.Contains(@0)' : '',
-        paramValues: hasSearch ? [searchPredicate] : [],
+        queryInfo: {
+          ...queryInfo,
+          predicate: hasSearch
+            ? 'usuarioId.Contains(@0) || nombre.Contains(@0) || apellido.Contains(@0)'
+            : null,
+          paramValues: hasSearch ? [searchPredicate] : []
+        }
       });
       setRows(applySearchResult(data));
     } catch (err) {
