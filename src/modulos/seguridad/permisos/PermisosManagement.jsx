@@ -116,7 +116,7 @@ const PermisosManagement = () => {
       icon: saving ? <CircularProgress size={14} color="inherit" /> : <SaveIcon fontSize="small" />,
       onClick: handleSave,
       disabled: !selectedRolId || saving,
-      align: 'right',
+      align: 'left',
     },
   ];
 

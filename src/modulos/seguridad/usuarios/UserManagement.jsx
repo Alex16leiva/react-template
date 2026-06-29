@@ -214,21 +214,20 @@ const UserManagement = () => {
 
 
   return (
-    <SecundayContainerControl>
+    <SecundayContainerControl sx={{ display: 'flex', flexDirection: 'column' }}>
       <CommandBarControl items={commandItems} />
-      <Box sx={{m:2, height:'93%'}}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="h5" fontWeight={700}>Usuarios</Typography>
+        <Box sx={{ px: 2, py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+        
             <SearchControl
               value={searchText}
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Buscar por usuario, nombre o apellido..."
-              sx={{ width: 340 }}
+              sx={{ width: 380 }}
             />
-          </Box>
+        </Box>
 
-          <Box sx={{ height: '90%', width: '100%' }}>
+          <Box sx={{ flex: 1, minHeight: 0, p: 2 }}>
             <DataGridControl
               rows={rows}
               columns={columns}
@@ -242,7 +241,6 @@ const UserManagement = () => {
               getRowId={(r) => r.usuarioId}
             />
           </Box>
-        </Box>
       <UserForm
         open={formOpen}
         user={selectedUser}
