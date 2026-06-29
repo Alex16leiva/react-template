@@ -216,7 +216,7 @@ const UserManagement = () => {
   return (
     <SecundayContainerControl>
       <CommandBarControl items={commandItems} />
-      <Box sx={{m:2, height:'98%'}}>
+      <Box sx={{m:2, height:'93%'}}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
             <Typography variant="h5" fontWeight={700}>Usuarios</Typography>
             <SearchControl
